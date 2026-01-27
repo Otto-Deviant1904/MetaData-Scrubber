@@ -15,23 +15,23 @@ executor = ThreadPoolExecutor(max_workers=4)
 def process_image_fast(file_stream, original_format):
     """Fast image processing with optimizations"""
     
-    # Open image
+    
     img = Image.open(file_stream)
     
-    # Store dimensions
+    
     width, height = img.size
     
-    # Optimization 1: Resize huge images for faster processing
-    MAX_DIMENSION = 8192  # Reasonable limit
+    # Optimization 1: Resize huge images for faster processing, pain in the ahh
+    MAX_DIMENSION = 8192  # Seems legit
     if max(width, height) > MAX_DIMENSION:
         ratio = MAX_DIMENSION / max(width, height)
         new_size = (int(width * ratio), int(height * ratio))
         img = img.resize(new_size, Image.Resampling.LANCZOS)
     
-    # Optimization 2: Handle transparency efficiently
+    # Optimization 2: Handle transparency efficiently, idk why but ok
     if img.mode in ('RGBA', 'LA', 'P'):
         if original_format == 'JPEG':
-            # Convert to RGB for JPEG (no transparency)
+            # Convert to RGB for JPEG (no transparency), for coloured images
             background = Image.new('RGB', img.size, (255, 255, 255))
             if img.mode == 'P':
                 img = img.convert('RGBA')
@@ -47,7 +47,7 @@ def process_image_fast(file_stream, original_format):
     # Optimization 3: Use BytesIO for in-memory processing
     img_io = io.BytesIO()
     
-    # Optimization 4: Format-specific optimizations
+    # Optimization 4: Format-specific optimizations, JPEG is easy tbh
     if original_format == 'JPEG':
         # JPEG: Fast with good quality
         img.save(img_io, 'JPEG', quality=92, optimize=True, progressive=True)
@@ -144,11 +144,11 @@ def health_check():
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("🚀 METADATA SCRUBBER API v2.0 - OPTIMIZED")
+    print(" METADATA SCRUBBER API v2.0 - OPTIMIZED")
     print("="*60)
-    print("📍 Running on: http://127.0.0.1:5000")
-    print("🔧 Optimizations: Enabled")
-    print("⚡ Max workers: 4")
+    print(" Running on: http://127.0.0.1:5000")
+    print(" Optimizations: Enabled")
+    print(" Max workers: 4")
     print("="*60 + "\n")
     
     app.run(debug=True, port=5000, threaded=True)
