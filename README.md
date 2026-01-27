@@ -17,14 +17,14 @@ A fast, privacy-focused web application that removes EXIF metadata from images w
 
 ### What Gets Removed
 
-✅ GPS Location  
-✅ Camera Model & Make  
-✅ Date & Time Taken  
-✅ Camera Settings (ISO, Aperture, Shutter Speed)  
-✅ Software Information  
-✅ Copyright & Artist Data  
-✅ Thumbnail Images  
-✅ All EXIF Tags  
+GPS Location  
+Camera Model & Make  
+Date & Time Taken  
+Camera Settings (ISO, Aperture, Shutter Speed)  
+Software Information  
+Copyright & Artist Data  
+Thumbnail Images  
+All EXIF Tags  
 
 ---
 
