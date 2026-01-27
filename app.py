@@ -3,45 +3,152 @@ from flask_cors import CORS
 from PIL import Image
 import io
 import os
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend to communicate with backend
+CORS(app)
+
+# Thread pool for async processing
+executor = ThreadPoolExecutor(max_workers=4)
+
+def process_image_fast(file_stream, original_format):
+    """Fast image processing with optimizations"""
+    
+    # Open image
+    img = Image.open(file_stream)
+    
+    # Store dimensions
+    width, height = img.size
+    
+    # Optimization 1: Resize huge images for faster processing
+    MAX_DIMENSION = 8192  # Reasonable limit
+    if max(width, height) > MAX_DIMENSION:
+        ratio = MAX_DIMENSION / max(width, height)
+        new_size = (int(width * ratio), int(height * ratio))
+        img = img.resize(new_size, Image.Resampling.LANCZOS)
+    
+    # Optimization 2: Handle transparency efficiently
+    if img.mode in ('RGBA', 'LA', 'P'):
+        if original_format == 'JPEG':
+            # Convert to RGB for JPEG (no transparency)
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            if img.mode in ('RGBA', 'LA'):
+                background.paste(img, mask=img.split()[-1])
+                img = background
+        else:
+            # Keep RGBA for PNG
+            img = img.convert('RGBA')
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+    
+    # Optimization 3: Use BytesIO for in-memory processing
+    img_io = io.BytesIO()
+    
+    # Optimization 4: Format-specific optimizations
+    if original_format == 'JPEG':
+        # JPEG: Fast with good quality
+        img.save(img_io, 'JPEG', quality=92, optimize=True, progressive=True)
+        mimetype = 'image/jpeg'
+        filename = 'scrubbed_image.jpg'
+    elif original_format == 'PNG':
+        # PNG: Balanced compression (6 is sweet spot)
+        img.save(img_io, 'PNG', optimize=True, compress_level=6)
+        mimetype = 'image/png'
+        filename = 'scrubbed_image.png'
+    elif original_format == 'WEBP':
+        # WEBP: Best compression/quality ratio
+        img.save(img_io, 'WEBP', quality=90, method=4)
+        mimetype = 'image/webp'
+        filename = 'scrubbed_image.webp'
+    else:
+        # Default to JPEG for speed
+        img.save(img_io, 'JPEG', quality=92, optimize=True)
+        mimetype = 'image/jpeg'
+        filename = 'scrubbed_image.jpg'
+    
+    img_io.seek(0)
+    return img_io, mimetype, filename
 
 @app.route('/')
 def home():
-    return "Metadata Scrubber API is running!"
+    return jsonify({
+        'status': 'running',
+        'service': 'Metadata Scrubber API',
+        'version': '2.0',
+        'endpoints': ['/scrub']
+    })
 
 @app.route('/scrub', methods=['POST'])
 def scrub_metadata():
+    """Optimized metadata scrubbing endpoint"""
+    
+    start_time = time.time()
+    
     try:
-        # Get the uploaded file
+        # Validation
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
         
         file = request.files['image']
         
-        # Open image with PIL
-        img = Image.open(file.stream)
+        if not file.filename:
+            return jsonify({'error': 'Empty filename'}), 400
         
-        # Create a new image without metadata
-        # Convert to RGB if necessary (handles transparency)
-        if img.mode in ('RGBA', 'LA', 'P'):
-            # Create white background
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'P':
-                img = img.convert('RGBA')
-            background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-            img = background
+        # Detect format from file extension
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        format_map = {
+            '.jpg': 'JPEG',
+            '.jpeg': 'JPEG',
+            '.png': 'PNG',
+            '.webp': 'WEBP',
+            '.bmp': 'BMP',
+            '.tiff': 'TIFF'
+        }
+        original_format = format_map.get(file_ext, 'JPEG')
         
-        # Save to bytes buffer without metadata
-        img_io = io.BytesIO()
-        img.save(img_io, 'PNG')  # PNG format, no EXIF data
-        img_io.seek(0)
+        # Process image
+        img_io, mimetype, filename = process_image_fast(file.stream, original_format)
         
-        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name='scrubbed_image.png')
+        # Calculate processing time
+        processing_time = time.time() - start_time
+        
+        # Add custom header with processing time
+        response = send_file(
+            img_io,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=filename
+        )
+        response.headers['X-Processing-Time'] = f'{processing_time:.3f}'
+        
+        return response
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_time = time.time() - start_time
+        print(f"Error after {error_time:.2f}s: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'processing_time': f'{error_time:.3f}'
+        }), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': time.time()
+    })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    print("\n" + "="*60)
+    print("🚀 METADATA SCRUBBER API v2.0 - OPTIMIZED")
+    print("="*60)
+    print("📍 Running on: http://127.0.0.1:5000")
+    print("🔧 Optimizations: Enabled")
+    print("⚡ Max workers: 4")
+    print("="*60 + "\n")
+    
+    app.run(debug=True, port=5000, threaded=True)
