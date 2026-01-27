@@ -47,7 +47,6 @@ scrubBtn.addEventListener('click', async function() {
     loading.style.display = 'flex';
     scrubBtn.disabled = true;
     
-    statusIcon.textContent = '⚙️';
     statusText.textContent = 'Processing...';
     
     const startTime = performance.now();
@@ -78,7 +77,6 @@ scrubBtn.addEventListener('click', async function() {
         previewImg.src = scrubbedURL;
         
         // Update status
-        statusIcon.textContent = '✅';
         statusText.textContent = 'Metadata successfully removed!';
         statusText.style.color = '#38ef7d';
         
@@ -98,7 +96,6 @@ scrubBtn.addEventListener('click', async function() {
         downloadBtn.style.display = 'inline-flex';
         
     } catch (error) {
-        statusIcon.textContent = '❌';
         statusText.textContent = 'Error: ' + error.message;
         statusText.style.color = '#e74c3c';
         console.error('Error:', error);
