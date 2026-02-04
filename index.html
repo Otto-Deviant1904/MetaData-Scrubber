@@ -1,84 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metadata Scrubber</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Metadata Scrubber</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Metadata Scrubber</h1>
-            <p>Remove EXIF data and protect your privacy</p>
-        </div>
-        
-        <div class="upload-section">
-            <input type="file" id="fileInput" accept="image/*" hidden>
-            <label for="fileInput" class="upload-box">
-                <div class="upload-icon"></div>
-                <p class="upload-text">Click to upload or drag & drop</p>
-                <p class="upload-hint">Supports JPG, PNG, WEBP</p>
-            </label>
-        </div>
-        
-        <div id="preview" class="preview-section" style="display:none;">
-            <div class="image-container">
-                <img id="previewImg" src="" alt="Preview">
-            </div>
-            
-            <div class="status-card">
-                <div id="statusIcon" class="status-icon"></div>
-                <p id="statusText" class="status-text">Ready to scrub</p>
-            </div>
-            
-            <div id="statsCard" class="stats-card" style="display:none;">
-                <h3>Processing Stats</h3>
-                <div class="stat-row">
-                    <span class="stat-label">Time Taken:</span>
-                    <span id="timeStat" class="stat-value">-</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Original Size:</span>
-                    <span id="originalSizeStat" class="stat-value">-</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Final Size:</span>
-                    <span id="finalSizeStat" class="stat-value">-</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Change:</span>
-                    <span id="changeStat" class="stat-value">-</span>
-                </div>
-            </div>
-            
-            <div class="button-group">
-                <button id="scrubBtn" class="btn btn-primary">
-                    <span class="btn-icon"></span>
-                    Scrub Metadata
-                </button>
-                <button id="downloadBtn" class="btn btn-success" style="display:none;">
-                    <span class="btn-icon">⬇</span>
-                    Download Clean Image
-                </button>
-                <button id="resetBtn" class="btn btn-secondary">
-                    <span class="btn-icon"></span>
-                    Upload New
-                </button>
-            </div>
-        </div>
-        
-        <div id="loading" class="loading-overlay" style="display:none;">
-            <div class="spinner"></div>
-            <p>Processing your image...</p>
-        </div>
-        
-        <div class="info-section">
-            <h3>What is Metadata?</h3>
-            <p>Images contain hidden information like GPS location, camera model, timestamps, and more. This tool removes all that data while keeping your image quality intact.</p>
-        </div>
+
+<main class="app">
+  <header class="top">
+    <h1>Metadata Scrubber</h1>
+    <p>Remove hidden EXIF data from images.</p>
+  </header>
+
+  <section class="card upload-card">
+    <input type="file" id="fileInput" accept="image/*" />
+
+    <div class="dropzone" id="dropzone">
+      <span class="dz-title">Drop image here</span>
+      <span class="dz-sub">or click to upload</span>
+      <span class="dz-hint">JPG · PNG · WEBP</span>
     </div>
-    
-    <script src="script.js"></script>
+  </section>
+
+  <section id="preview" class="card preview-card" style="display:none;">
+    <img id="previewImg" alt="Preview"/>
+
+    <p id="statusText" class="status"></p>
+
+    <div id="statsCard" class="stats" style="display:none;">
+      <div><span>Original</span><strong id="originalSizeStat">-</strong></div>
+      <div><span>Final</span><strong id="finalSizeStat">-</strong></div>
+    </div>
+
+    <div class="actions">
+      <button id="scrubBtn" class="btn primary">Scrub</button>
+      <button id="downloadBtn" class="btn success" style="display:none;">Download</button>
+      <button id="resetBtn" class="btn ghost">Reset</button>
+    </div>
+  </section>
+</main>
+
+<div id="loading" class="loading" style="display:none;">
+  <div class="loader"></div>
+  <span>Processing image…</span>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
