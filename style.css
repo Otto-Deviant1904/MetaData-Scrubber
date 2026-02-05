@@ -115,11 +115,12 @@ body {
 .actions {
   display: flex;
   gap: 12px;
+  justify-content: center; /* Centers buttons horizontally */
 }
 
 .btn {
-  flex: 1;
-  padding: 12px;
+  flex: 0 1 auto; /* Changed from flex: 1 to allow natural button width */
+  padding: 12px 24px; /* Added horizontal padding for better button size */
   border-radius: 12px;
   border: none;
   font-weight: 600;
