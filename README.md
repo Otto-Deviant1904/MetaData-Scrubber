@@ -26,17 +26,6 @@ Copyright & Artist Data
 Thumbnail Images  
 All EXIF Tags  
 
----
-
-##  Demo
-
-![Metadata Scrubber Demo](demo.gif)
-
-**Live Demo:** [Coming Soon]
-
----
-
-##  Installation
 
 ### Prerequisites
 
@@ -44,5 +33,4 @@ All EXIF Tags
 - pip (Python package manager)
 - Virtual environment (recommended)
 
-### Quick Start
-```bash
+
