@@ -1,10 +1,11 @@
-const API_URL = 'http://localhost:5000';
+const API_URL = window.location.protocol.startsWith('http')
+    ? window.location.origin
+    : 'http://127.0.0.1:5000';
 
 const fileInput = document.getElementById('fileInput');
-const uploadBox = document.getElementById('uploadBox');
+const uploadBox = document.getElementById('dropzone');
 const preview = document.getElementById('preview');
 const previewImg = document.getElementById('previewImg');
-const statusIcon = document.getElementById('statusIcon');
 const statusText = document.getElementById('statusText');
 const statsCard = document.getElementById('statsCard');
 const scrubBtn = document.getElementById('scrubBtn');
@@ -17,6 +18,7 @@ const progressPercent = document.getElementById('progressPercent');
 
 let selectedFile = null;
 let scrubbedBlob = null;
+let previewObjectUrl = null;
 
 // Check server health on load
 async function checkServerHealth() {
@@ -45,8 +47,12 @@ function simulateProgress(duration) {
             progress = 95;
             clearInterval(progressInterval);
         }
-        progressFill.style.width = progress + '%';
-        progressPercent.textContent = Math.floor(progress) + '%';
+        if (progressFill) {
+            progressFill.style.width = progress + '%';
+        }
+        if (progressPercent) {
+            progressPercent.textContent = Math.floor(progress) + '%';
+        }
     }, interval);
     
     return progressInterval;
@@ -54,7 +60,7 @@ function simulateProgress(duration) {
 
 // Validate file before upload
 function validateFile(file) {
-    const supportedFormats = ['.jpg', '.jpeg', '.png', '.webp', '.bmp'];
+    const supportedFormats = ['.jpg', '.jpeg', '.png', '.webp'];
     const maxSize = 100 * 1024 * 1024; // 100MB
     
     const ext = '.' + file.name.split('.').pop().toLowerCase();
@@ -152,8 +158,12 @@ scrubBtn.addEventListener('click', async function() {
     statusText.textContent = 'Processing...';
     
     // Reset progress
-    progressFill.style.width = '0%';
-    progressPercent.textContent = '0%';
+    if (progressFill) {
+        progressFill.style.width = '0%';
+    }
+    if (progressPercent) {
+        progressPercent.textContent = '0%';
+    }
     
     const startTime = performance.now();
     const originalSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
@@ -166,7 +176,9 @@ scrubBtn.addEventListener('click', async function() {
         formData.append('image', selectedFile);
         
         // Update loading text
-        loadingText.textContent = 'Removing metadata...';
+        if (loadingText) {
+            loadingText.textContent = 'Removing metadata...';
+        }
         
         const response = await fetch(`${API_URL}/scrub`, {
             method: 'POST',
@@ -188,34 +200,51 @@ scrubBtn.addEventListener('click', async function() {
         
         // Complete progress
         clearInterval(progressInterval);
-        progressFill.style.width = '100%';
-        progressPercent.textContent = '100%';
+        if (progressFill) {
+            progressFill.style.width = '100%';
+        }
+        if (progressPercent) {
+            progressPercent.textContent = '100%';
+        }
         
         const totalTime = ((endTime - startTime) / 1000).toFixed(2);
         const finalSizeMB = (scrubbedBlob.size / 1024 / 1024).toFixed(2);
         const sizeChange = ((scrubbedBlob.size - selectedFile.size) / selectedFile.size * 100).toFixed(1);
-        const speedMBps = (selectedFile.size / 1024 / 1024 / parseFloat(totalTime)).toFixed(2);
+        const elapsedSeconds = Math.max(parseFloat(totalTime), 0.01);
+        const speedMBps = (selectedFile.size / 1024 / 1024 / elapsedSeconds).toFixed(2);
         
         // Update preview
-        const scrubbedURL = URL.createObjectURL(scrubbedBlob);
-        previewImg.src = scrubbedURL;
+        if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+        }
+        previewObjectUrl = URL.createObjectURL(scrubbedBlob);
+        previewImg.src = previewObjectUrl;
         
         // Update status
         statusText.textContent = `${metadataRemoved || 'Metadata'} successfully removed!`;
         
         // Show stats
         statsCard.style.display = 'block';
-        document.getElementById('timeStat').textContent = `${totalTime}s`;
-        document.getElementById('originalSizeStat').textContent = `${originalSizeMB} MB`;
-        document.getElementById('finalSizeStat').textContent = `${finalSizeMB} MB`;
-        document.getElementById('dimensionsStat').textContent = 
-            `${selectedFile.dimensions.width} × ${selectedFile.dimensions.height}`;
-        document.getElementById('speedStat').textContent = `${speedMBps} MB/s`;
+        const timeStat = document.getElementById('timeStat');
+        const originalSizeStat = document.getElementById('originalSizeStat');
+        const finalSizeStat = document.getElementById('finalSizeStat');
+        const dimensionsStat = document.getElementById('dimensionsStat');
+        const speedStat = document.getElementById('speedStat');
+        const changeStat = document.getElementById('changeStat');
+
+        if (timeStat) timeStat.textContent = `${totalTime}s`;
+        if (originalSizeStat) originalSizeStat.textContent = `${originalSizeMB} MB`;
+        if (finalSizeStat) finalSizeStat.textContent = `${finalSizeMB} MB`;
+        if (dimensionsStat && selectedFile.dimensions) {
+            dimensionsStat.textContent = `${selectedFile.dimensions.width} x ${selectedFile.dimensions.height}`;
+        }
+        if (speedStat) speedStat.textContent = `${speedMBps} MB/s`;
         
         const changeColor = sizeChange > 0 ? '#e74c3c' : '#38ef7d';
         const changeSymbol = sizeChange > 0 ? '+' : '';
-        document.getElementById('changeStat').innerHTML = 
-            `<span style="color: ${changeColor}; font-weight: 900;">${changeSymbol}${sizeChange}%</span>`;
+        if (changeStat) {
+            changeStat.innerHTML = `<span style="color: ${changeColor}; font-weight: 900;">${changeSymbol}${sizeChange}%</span>`;
+        }
         
         // Update buttons
         scrubBtn.style.display = 'none';
@@ -262,6 +291,14 @@ resetBtn.addEventListener('click', function() {
     scrubbedBlob = null;
     preview.style.display = 'none';
     statsCard.style.display = 'none';
+    if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+    }
+});
+
+uploadBox.addEventListener('click', function() {
+    fileInput.click();
 });
 
 // Drag and drop functionality

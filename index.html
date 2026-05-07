@@ -30,8 +30,12 @@
     <p id="statusText" class="status"></p>
 
     <div id="statsCard" class="stats" style="display:none;">
+      <div><span>Time</span><strong id="timeStat">-</strong></div>
       <div><span>Original</span><strong id="originalSizeStat">-</strong></div>
       <div><span>Final</span><strong id="finalSizeStat">-</strong></div>
+      <div><span>Dimensions</span><strong id="dimensionsStat">-</strong></div>
+      <div><span>Speed</span><strong id="speedStat">-</strong></div>
+      <div><span>Size Change</span><strong id="changeStat">-</strong></div>
     </div>
 
     <div class="actions">
@@ -44,7 +48,11 @@
 
 <div id="loading" class="loading" style="display:none;">
   <div class="loader"></div>
-  <span>Processing image…</span>
+  <span id="loadingText">Processing image...</span>
+  <div class="progress-track" aria-hidden="true">
+    <div id="progressFill" class="progress-fill"></div>
+  </div>
+  <span id="progressPercent">0%</span>
 </div>
 
 <script src="script.js"></script>

@@ -159,6 +159,25 @@ body {
   align-items: center;
 }
 
+#fileInput {
+  display: none;
+}
+
+.progress-track {
+  width: min(360px, 80vw);
+  height: 10px;
+  border-radius: 999px;
+  background: #2c3142;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transition: width 120ms linear;
+}
+
 .loader {
   width: 42px;
   height: 42px;
