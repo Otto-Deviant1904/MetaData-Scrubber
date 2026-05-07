@@ -7,6 +7,7 @@ from enum import Enum
 from dataclasses import dataclass
 
 from PIL import Image, UnidentifiedImageError
+from PIL.PngImagePlugin import PngInfo
 
 
 
@@ -105,20 +106,37 @@ class ImageScrubber:
                 if not img.format:
                     raise ValueError("Unknown image format")
 
-                # pixel-only copy -> drops all metadata
-                clean_img = Image.new(img.mode, img.size)
-                clean_img.putdata(list(img.getdata()))
-
                 fmt = img.format.upper()
+                save_kwargs = {}
+
+                # Remove metadata fields if present.
+                img.info.pop("exif", None)
+                img.info.pop("icc_profile", None)
+                img.info.pop("xmp", None)
 
                 if fmt == "JPEG":
-                    clean_img.save(tmp_path, "JPEG", quality=95, optimize=True)
+                    save_kwargs = {
+                        "format": "JPEG",
+                        "quality": 95,
+                        "exif": b"",
+                    }
                 elif fmt == "PNG":
-                    clean_img.save(tmp_path, "PNG", optimize=True)
+                    save_kwargs = {
+                        "format": "PNG",
+                        "pnginfo": PngInfo(),
+                        "optimize": False,
+                    }
                 elif fmt == "WEBP":
-                    clean_img.save(tmp_path, "WEBP", quality=95)
+                    save_kwargs = {
+                        "format": "WEBP",
+                        "quality": 95,
+                        "exif": b"",
+                    }
                 else:
-                    clean_img.save(tmp_path, fmt)
+                    save_kwargs = {"format": fmt}
+
+                # Save directly from Pillow image object to avoid expensive Python-level pixel copies.
+                img.save(tmp_path, **save_kwargs)
 
             shutil.move(str(tmp_path), str(output_path))
             tmp_path = None
