@@ -1,6 +1,6 @@
-const API_URL = window.location.protocol.startsWith('http')
-    ? window.location.origin
-    : 'http://127.0.0.1:5000';
+const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+    ? 'http://127.0.0.1:5000'
+    : window.location.origin;
 
 const fileInput = document.getElementById('fileInput');
 const uploadBox = document.getElementById('dropzone');
